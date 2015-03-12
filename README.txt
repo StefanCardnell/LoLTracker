@@ -15,6 +15,7 @@ less prone to error.
 - The name, champion and team of the person searched for are displayed at the top when displaying the current game stats. 
 - The game mode is shown at the top
 - A running clock displaying the current game time has been added
+- Non-ASCII characters should now be displayed normally
 
 - Post game stats have been added. After a game ends the program attempts to retrieve post-game stats for 2 minutes. If it finds them
 it shows these stats for the next 3 minutes, otherwise is exits back to the original loop (searches for a game).
