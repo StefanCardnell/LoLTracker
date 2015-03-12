@@ -54,7 +54,7 @@ values to CurrentGameLoopJSONPi.cpp (as indicated by the comments inside) and co
 JSONCPP, ncurses and libcurl will need to be manually downloaded, installed and linked in the compilation. e.g.
 
 g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -L/usr/local/lib -L/usr/lib/ar-linux-gnueabihf 
--lncurses -lcurl automated.cpp CurrentGameFunctions.cpp
+-lncurses -lcurl CurrentGameLoopJSONPi.cp CurrentGameFunctions.cpp
 
 - Compile CurrentGameLoopJSONPiInput.cpp and CurrentGameFunctionsJSON.cpp together to obtain the already provided input.exe
 
