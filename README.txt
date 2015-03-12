@@ -2,6 +2,7 @@ README:
 
 Updated from the previous version severly.
 
+- This system is designed for UNIX. It will not port (correctly) to Windows. 
 
 [DESIGNER-LEVEL CHANGES]:
 
@@ -34,6 +35,8 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 
 - Append your key to ?api_key= in "key.txt"
 
+- The program may not work with non-EUW keys, although I doubt this.
+
 - Keep "key.txt" in the same folder as input.exe.
 
 - Run the program!
@@ -48,7 +51,10 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 
 - I have included the source codes. You can compile your own version that does not take any input (name, server, display) by adding the desired
 values to CurrentGameLoopJSONPi.cpp (as indicated by the comments inside) and compiling this with CurrentGameFunctionsJSON.cpp. The libraries
-JSONCPP, ncurses and libcurl will need to be manually downloaded, installed and linked in the compilation. 
+JSONCPP, ncurses and libcurl will need to be manually downloaded, installed and linked in the compilation. e.g.
+
+g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -L/usr/local/lib -L/usr/lib/ar-linux-gnueabihf 
+-lncurses -lcurl automated.cpp CurrentGameFunctions.cpp
 
 - Compile CurrentGameLoopJSONPiInput.cpp and CurrentGameFunctionsJSON.cpp together to obtain the already provided input.exe
 
