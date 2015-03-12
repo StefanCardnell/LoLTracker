@@ -1,87 +1,62 @@
-- I am a novice programmer. The code used is inefficient, cuts corners and has potential security issues 
-(for instance, SSL verification is turned off), but it does get the job done. I was also too lazy to read 
-up on JSON and the code instead interprets the data sent back as one long string and picks out the relevant 
-info with pattern-matching functions. As a result the program may become unusable if Riot changes the 
-formatting of the data sent back. I will rewrite the code to use JSON at some point, or you can feel tree 
-to rewrite as you like. 
+README:
+
+Updated from the previous version severly.
 
 
-- This system is designed for UNIX. It will not port (correctly) to Windows. 
+[DESIGNER-LEVEL CHANGES]:
+
+JSON is now used rather than those laborious pattern-matching functions I had before, making the program more effective and
+less prone to error. 
 
 
+[USER-LEVEL CHANGES]:
+
+- The name, champion and team of the person searched for are displayed at the top when displaying the current game stats. 
+- The game mode is shown at the top
+- A running clock displaying the current game time has been added
+
+- Post game stats have been added. After a game ends the program attempts to retrieve post-game stats for 2 minutes. If it finds them
+it shows these stats for the next 3 minutes, otherwise is exits back to the original loop (searches for a game).
+- Among these post game stats are KDA, Wards Placed, Damage Taken, CS per 10, Ally/Enemy Drakes, Ally/Enemy Barons et al.
 
 
+[BUG FIXES]:
 
-
-
-
-TO GET IT WORKING:
-
-
-
-- Obtain your own API key from Riot's website (Google this).
-
-
-
-- The program may not work with non-EUW keys, although I doubt this.
-
-
-
-- Append your obtained API key to the end of "?api_key=" found in keyinput.txt.
-
-
-
-- Make sure the executable and keyinput.txt are in the same folder.
-
-
-
-- Run the executable.
-
-
-
-- Once the loop starts, the only way to exit is Cntrl+Z.
-
-
-
-- If you keep getting the error "No data, connection error?" make sure you entered the API Key correctly.
+- If connection errors occured then the program would exit, this has now hopefully been fixed.
+- Sometimes after a game ended and the program went to search for a new game, it would re-find the game just exited, this has hopefully been fixed.
 
 
 
 
+[TO USE]:
+
+- Obtain a Riot Games API key (google this)
+
+- Append your key to ?api_key= in "key.txt"
+
+- Keep "key.txt" in the same folder as input.exe.
+
+- Run the program!
+
+- If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
+
+- To exit, Press Cntrl+C. 
+
+
+[TO RE-BUILD]:
+
+
+- I have included the source codes. You can compile your own version that does not take any input (name, server, display) by adding the desired
+values to CurrentGameLoopJSONPi.cpp (as indicated by the comments inside) and compiling this with CurrentGameFunctionsJSON.cpp. The libraries
+JSONCPP, ncurses and libcurl will need to be manually downloaded, installed and linked in the compilation. 
+
+- Compile CurrentGameLoopJSONPiInput.cpp and CurrentGameFunctionsJSON.cpp together to obtain the already provided input.exe
 
 
 
+[FUTURE IMPROVEMENTS]
 
+- Hope to add position of Damage Taken/Damage Dealt in relation to the team. This relies on riot providing such data though.
 
+- Hope to find a way so that name/server/display can be added to a text file and there will be no need for input (stdio and ncurses don't go well together).
 
-
-
-ADDITIONAL:
-
-
-
-- The League Divisions shown (e.g. Challenger I) automatically shorten if the data would go off the end of 
-the screen (likely to happen if you play, for example, with Challenger I Heimerdingers!).
-
-
-
-- automated.cpp contains source code to create an automated display program (i.e. no user input required). This needs 
-to be personalised and compiled yourself.
-
-
-
-- readinput.cpp is the source code for a display which requires user input (e.g. name, server).
-
-
-
-- CurrentGameFunctions.cpp is a source file needed to be included in compiling automated.cpp or readinput.cpp
-
-
-
-- If you want to compile the source code yourself, make sure to include CurrentGameFunctions.cpp and install 
-the curl and ncurses libraries, making sure to link to the correct headers and libraries, 
-
-e.g:
-
-g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -L/usr/local/lib -L/usr/lib/ar-linux-gnueabihf 
--lncurses -lcurl automated.cpp CurrentGameFunctions.cpp
