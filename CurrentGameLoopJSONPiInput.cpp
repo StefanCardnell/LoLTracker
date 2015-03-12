@@ -74,7 +74,7 @@ int main(){
 
     string name, server, displayanswer, key, platformid;
 
-    ifstream keyinput("/home/pi/LeagueGame/key.txt");
+    ifstream keyinput("key.txt");
     if(!keyinput.is_open()){
         cout << "key.txt could not be found. Exiting..." << endl;
         sleep(5);

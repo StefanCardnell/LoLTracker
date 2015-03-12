@@ -76,7 +76,7 @@ int main(){
 
     string name = /*ENTER HERE*/, server = /*ENTER HERE*/, displayanswer = /*ENTER Y or N HERE*/, key; //CHANGE 1 of 1: PERSONALISE BY ENTEREING VALUES HERE, LEAVE KEY ALONE.
 
-    ifstream keyinput("/home/pi/LeagueGame/key.txt");
+    ifstream keyinput("key.txt");
     if(!keyinput.is_open()){
         cout << "key.txt could not be found. Exiting..." << endl;
         sleep(5);
