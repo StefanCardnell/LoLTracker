@@ -24,8 +24,11 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 
 [BUG FIXES]:
 
+[11TH MARCH 2015]:
 - If connection errors occured then the program would exit, this has now hopefully been fixed.
 - Sometimes after a game ended and the program went to search for a new game, it would re-find the game just exited, this has hopefully been fixed.
+[12TH MARCH 2015]:
+- Fixed errors where the program would crash if a champion wasn't recognised (e.g. after a new patch).  
 
 
 
@@ -40,14 +43,16 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 
 - Keep "key.txt" in the same folder as input.exe.
 
-- Run the program!
-
-- If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
+- Run the program (input.exe)!
 
 - To exit, Press Cntrl+C. 
 
 
-- Particularly after patches which introduce new champions, this program may not work correctly (because Riot needs to update their data).
+[ERROR-HANDLING]
+
+- If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
+
+- Unlikely but the program may not work after game patches. This may fix itself after a day or two once riot updates their stuff.
 
 
 [TO RE-BUILD]:
@@ -69,4 +74,3 @@ g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -L/usr/local/lib -L/u
 - Hope to add position of Damage Taken/Damage Dealt in relation to the team. This relies on riot providing such data though.
 
 - Hope to find a way so that name/server/display can be added to a text file and there will be no need for input (stdio and ncurses don't go well together).
-

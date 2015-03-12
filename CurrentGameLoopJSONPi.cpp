@@ -4,10 +4,7 @@
 //g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ -lcurl -ljsoncpp -lncursesw CurrentGameLoopJSONPi.cpp CurrentGameFunctionsJSON.cpp
 //USE THIS FOR WCHAR^^
 
-
-//TO PERSONALISE, LOOK FOR THE COMMENT NOT-SO-FAR-BELOW
-
-
+// TO PERSONALISE FOR SELF-COMPILATION, LOOK FOR CHANGE 1 of 1 BELOW
 
 #define _XOPEN_SOURCE_EXTENDED //needed to get ncurses to display wchar, see http://www.roguebasin.com/index.php?title=Ncursesw
 #define CURL_STATICLIB
@@ -77,9 +74,9 @@ int main(){
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
 
-    string name = /*add here*/, server = /*add here*/, displayanswer = /*add y or n here*/, key; //*******CHANGE 1 OF 1: CHANGE THESE TO DESIRED********
+    string name = /*ENTER HERE*/, server = /*ENTER HERE*/, displayanswer = /*ENTER Y or N HERE*/, key; //CHANGE 1 of 1: PERSONALISE BY ENTEREING VALUES HERE, LEAVE KEY ALONE.
 
-    ifstream keyinput("key.txt");
+    ifstream keyinput("/home/pi/LeagueGame/key.txt");
     if(!keyinput.is_open()){
         cout << "key.txt could not be found. Exiting..." << endl;
         sleep(5);
@@ -250,6 +247,7 @@ int main(){
         string output;
 
         for(auto& c : gameinfo["participants"]){
+            c["champname"] = "UNKNOWN";
             c["position"] = "(UNRANKED)";
             for(auto d : leagueinfo[to_string(c["summonerId"].asInt())])
                 if(d["queue"].asString() == "RANKED_SOLO_5x5"){
@@ -353,9 +351,9 @@ int main(){
 
                 if(i < bluesize){
                     auto f = gameinfo["participants"][i];
-                    mvprintw((row/2)-(printlines/2)+6+i, ((col-maxlength)/2), f["champname"].asCString());
+                    mvprintw((row/2)-(printlines/2)+6+i, ((col-maxlength)/2), f["champname"].asString().c_str());
                     if(display) printw((" \"" + f["summonerName"].asString() + "\"").c_str());
-                    mvprintw((row/2)-(printlines/2)+6+i, ((col-maxlength)/2) + maxlengthA - strlen(f["position"].asCString()), f["position"].asCString());
+                    mvprintw((row/2)-(printlines/2)+6+i, ((col-maxlength)/2) + maxlengthA - f["position"].asString().size(), f["position"].asString().c_str());
                 }
                 if(i < purplesize){
                     auto g = gameinfo["participants"][i+bluesize];
