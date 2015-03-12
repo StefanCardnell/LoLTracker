@@ -47,6 +47,9 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 - To exit, Press Cntrl+C. 
 
 
+- Particularly after patches which introduce new champions, this program may not work correctly (because Riot needs to update their data).
+
+
 [TO RE-BUILD]:
 
 
