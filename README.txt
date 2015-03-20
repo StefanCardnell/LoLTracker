@@ -52,6 +52,8 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 
 - If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
 
+- Other issues may be caused by issues in Riot's end with sending back API data.
+
 - Unlikely but the program may not work after game patches. This may fix itself after a day or two once riot updates their stuff.
 
 
@@ -74,3 +76,5 @@ g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -L/usr/local/lib -L/u
 - Hope to add position of Damage Taken/Damage Dealt in relation to the team. This relies on riot providing such data though.
 
 - Hope to find a way so that name/server/display can be added to a text file and there will be no need for input (stdio and ncurses don't go well together).
+
+- Hope to add separate error messages for when there are issues on Riot's end. 
