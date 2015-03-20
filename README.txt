@@ -52,7 +52,7 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 
 - If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
 
-- Other issues may be caused by issues in Riot's end with sending back API data.
+- Other errors may be caused by issues on Riot's end.
 
 - Unlikely but the program may not work after game patches. This may fix itself after a day or two once riot updates their stuff.
 
