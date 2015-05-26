@@ -16,7 +16,28 @@ README:
 
 
 
-[TO USE]:
+IMPORTANT!!!!!!!!: [TO USE]:
+
+DOWNLOAD THE APPROPRIATE LIBRARIES!
+
+Unfortunately a few external libraries are needed to get this to run: libcurl, JSON and ncursesw. Make sure to update your cache and
+run these two commands:
+
+sudo apt-get install libjsoncpp-dev
+sudo apt-get install libncursesw5-dev
+
+The last one, libcurl, needs to be downloaded from the top of this link:
+
+http://curl.haxx.se/download.html
+
+And extracted/installed in the normal way:
+
+tar -zxvf curl-7.42.1.tar.gz 
+cd curl-7.42.1 
+make 
+make install
+
+After that:
 
 - Obtain a Riot Games API key (google this)
 
