@@ -4,6 +4,8 @@ README:
 
 
 
+
+
 [BUG FIXES]:
 
 [11TH MARCH 2015]:
@@ -16,7 +18,11 @@ README:
 
 
 
-IMPORTANT!!!!!!!!: [TO USE]:
+
+
+
+
+[TO USE THE PROGRAM] [IMPORTANT!!]:
 
 DOWNLOAD THE APPROPRIATE LIBRARIES!
 
@@ -30,12 +36,13 @@ The last one, libcurl, needs to be downloaded from the top of this link:
 
 http://curl.haxx.se/download.html
 
-And extracted/installed in the normal way:
+And extracted/install in the normal way:
 
 tar -zxvf curl-7.42.1.tar.gz 
 cd curl-7.42.1 
 make 
 make install
+
 
 After that:
 
@@ -52,6 +59,27 @@ After that:
 - To exit, Press Cntrl+C. 
 
 
+
+
+[NORMAL OPERATION]
+
+1) The program will ask for a name, server, and whether to display summoner names
+
+2) If the player on the server is not found, the program will exit.
+
+3) If the player on the server is found, it will search for their current game. If a game is found it will display current game data.
+If a game is not found, it will the say that the player is not in a game until a game is found.
+
+4) When the game ends, the program attempts to receive post-game data for two minutes. If it is found it will display it for three minutes.
+
+5) Once the three minutes is up or no post-game data was found, it will go back to searching for a current game of the selected player.
+
+
+
+
+
+
+
 [ERROR-HANDLING]
 
 - If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
@@ -66,4 +94,4 @@ After that:
 
 - Hope to find a way so that name/server/display can be added to a text file and there will be no need for input (stdio and ncurses don't go well together).
 
-- Hope to add separate error messages for when there are issues on Riot's end. 
+
