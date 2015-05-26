@@ -1,6 +1,5 @@
 README:
 
-
 - This system is designed for UNIX. It will not port (correctly) to Windows. 
 
 
@@ -36,22 +35,7 @@ README:
 
 - If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
 
-- Other errors may be caused by issues on Riot's end.
-
 - Unlikely but the program may not work after game patches. This may fix itself after a day or two once riot updates their stuff.
-
-
-[TO RE-BUILD]:
-
-
-- I have included the source codes. You can compile your own version that does not take any input (name, server, display) by adding the desired
-values to CurrentGameLoopJSONPi.cpp (as indicated by the comments inside) and compiling this with CurrentGameFunctionsJSON.cpp. The libraries
-JSONCPP, ncurses and libcurl will need to be manually downloaded, installed and linked in the compilation. e.g.
-
-g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -L/usr/local/lib -L/usr/lib/ar-linux-gnueabihf 
--lncurses -lcurl CurrentGameLoopJSONPi.cp CurrentGameFunctions.cpp
-
-- Compile CurrentGameLoopJSONPiInput.cpp and CurrentGameFunctionsJSON.cpp together to obtain the already provided input.exe
 
 
 
