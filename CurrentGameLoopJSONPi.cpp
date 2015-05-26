@@ -4,8 +4,6 @@
 //g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ -lcurl -ljsoncpp -lncursesw CurrentGameLoopJSONPi.cpp CurrentGameFunctionsJSON.cpp
 //USE THIS FOR WCHAR^^
 
-// TO PERSONALISE FOR SELF-COMPILATION, LOOK FOR CHANGE 1 of 1 BELOW
-
 #define _XOPEN_SOURCE_EXTENDED //needed to get ncurses to display wchar, see http://www.roguebasin.com/index.php?title=Ncursesw
 #define CURL_STATICLIB
 
@@ -74,9 +72,11 @@ int main(){
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
 
-    string name = /*ENTER HERE*/, server = /*ENTER HERE*/, displayanswer = /*ENTER Y or N HERE*/, key; //CHANGE 1 of 1: PERSONALISE BY ENTEREING VALUES HERE, LEAVE KEY ALONE.
+    //HELLO USER
 
-    ifstream keyinput("key.txt");
+    string name = "AntiElephantMine", server = "euw", displayanswer = "n", key; //EDIT HERE TO PERSONALISE
+
+    ifstream keyinput("/home/pi/LeagueGame/key.txt");
     if(!keyinput.is_open()){
         cout << "key.txt could not be found. Exiting..." << endl;
         sleep(5);
@@ -92,7 +92,7 @@ int main(){
     getmaxyx(stdscr, row, col);
     refresh();
 
-    long long prevgameid = 0;
+    long long prevgameid = -1;
 
 
     while(true){
@@ -125,7 +125,6 @@ int main(){
             string error = "Connection error. Waiting a minute...";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
             refresh();
-            data = "";
             sleep(60);
             continue;
         }
@@ -140,6 +139,16 @@ int main(){
             sleep(5);
             endwin();
             return 0;
+        }
+        else if(!sumname["status"]["status_code"].isNull()){
+            erase();
+            string error = "Error code: " + to_string(sumname["status"]["status_code"].asInt());
+            mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+            error = sumname["status"]["message"].asString();
+            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
+            refresh();
+            sleep(60);
+            continue;
         }
 
 
@@ -162,10 +171,11 @@ int main(){
             string error = "Connection error. Waiting a minute...";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
             refresh();
-            data = "";
             sleep(60);
             continue;
         }
+
+
 
         reader.parse(data, gameinfo);
 
@@ -175,6 +185,16 @@ int main(){
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
             refresh();
             sleep(30);
+            continue;
+        }
+        else if(!gameinfo["status"]["status_code"].isNull()){
+            erase();
+            string error = "Error code: " + to_string(gameinfo["status"]["status_code"].asInt());
+            mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+            error = gameinfo["status"]["message"].asString();
+            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
+            refresh();
+            sleep(60);
             continue;
         }
 
@@ -206,14 +226,24 @@ int main(){
             string error = "Connection error. Waiting a minute...";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
             refresh();
-            data = "";
             sleep(60);
             continue;
         }
 
+
+
         reader.parse(data, championinfo);
 
-
+        if(!championinfo["status"]["status_code"].isNull()){
+            erase();
+            string error = "Error code: " + to_string(championinfo["status"]["status_code"].asInt());
+            mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+            error = championinfo["status"]["message"].asString();
+            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
+            refresh();
+            sleep(60);
+            continue;
+        }
 
 
         //BELOW: OBTAIN LEAGUE INFO
@@ -236,12 +266,22 @@ int main(){
             string error = "Connection error. Waiting a minute...";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
             refresh();
-            data = "";
             sleep(60);
             continue;
         }
 
         reader.parse(data, leagueinfo);
+
+        if(!leagueinfo["status"]["status_code"].isNull()){
+            erase();
+            string error = "Error code: " + to_string(leagueinfo["status"]["status_code"].asInt());
+            mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+            error = leagueinfo["status"]["message"].asString();
+            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
+            refresh();
+            sleep(60);
+            continue;
+        }
 
         string nameoutput; //for later
         string output;
@@ -271,7 +311,6 @@ int main(){
         //OUTPUT AND FORMATTING NEXT
 
         bool display = (tolower(displayanswer[0]) == 'y');
-        bool errorprint = false;
         unsigned maxlengthA = 0, maxlengthB = 0, maxlength;
         unsigned bluesize = 0, purplesize = 0;
 
@@ -336,7 +375,8 @@ int main(){
 
         curs_set(0);
 
-
+        bool errorprint = false;
+        string erroroutput;
 
         while(true){
 
@@ -366,9 +406,11 @@ int main(){
 
 
             if(errorprint){
-                output = "Connection error...";
-                mvprintw((row/2)-(printlines/2)+8+(bluesize > purplesize ? bluesize : purplesize), (col-output.size())/2, output.c_str());
+                mvprintw((row/2)-(printlines/2)+8+(bluesize > purplesize ? bluesize : purplesize), (col-erroroutput.size())/2, erroroutput.c_str());
+                errorprint = false;
             }
+
+
 
 
             int i = 0;
@@ -400,19 +442,30 @@ int main(){
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
             if(curl_easy_perform(curl) != CURLE_OK){
-                    errorprint = true;
-                    continue;
+                erroroutput = "Connection error...";
+                errorprint = true;
+                continue;
             }
-            else errorprint = false;
 
 
             Json::Value temp;
+
+
+
             reader.parse(data, temp);
 
-            if(temp.empty() || temp["gameId"] != gameinfo["gameId"])
+            if(temp.empty())
                 break;
-            else if(gametime == 0 && temp["gameStartTime"].asInt64() > 0)
+            if(!temp["status"]["status_code"].isNull()){
+                erroroutput = "Error code: " + to_string(temp["status"]["status_code"].asInt()) + ". " + temp["status"]["message"].asString() + ".";
+                errorprint = true;
+                continue;
+            }
+            if(temp["gameId"] != gameinfo["gameId"])
+                break;
+            if(gametime == 0 && temp["gameStartTime"].asInt64() > 0)
                 gametime = temp["gameStartTime"].asInt64()/1000;
+
         }
 
         bool found = false;
@@ -484,7 +537,9 @@ int main(){
 
             ++tries;
 
-            if(!postgameadditional.empty())
+            if(!postgame.empty() && !postgameadditional.empty()){
+                if(!postgame["status"]["status_code"].isNull() || !postgameadditional["status"]["status_code"].isNull())
+                    continue;
                 for(auto c : postgame["games"]){
                     if(c["gameId"] == gameinfo["gameId"]){
                         erase();
@@ -615,6 +670,7 @@ int main(){
 
                     }
                 }
+            }
 
         }while(found == false);
 

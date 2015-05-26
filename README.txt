@@ -1,25 +1,8 @@
 README:
 
-Updated from the previous version severly.
 
 - This system is designed for UNIX. It will not port (correctly) to Windows. 
 
-[DESIGNER-LEVEL CHANGES]:
-
-JSON is now used rather than those laborious pattern-matching functions I had before, making the program more effective and
-less prone to error. 
-
-
-[USER-LEVEL CHANGES]:
-
-- The name, champion and team of the person searched for are displayed at the top when displaying the current game stats. 
-- The game mode is shown at the top
-- A running clock displaying the current game time has been added
-- Non-ASCII characters should now be displayed normally
-
-- Post game stats have been added. After a game ends the program attempts to retrieve post-game stats for 2 minutes. If it finds them
-it shows these stats for the next 3 minutes, otherwise is exits back to the original loop (searches for a game).
-- Among these post game stats are KDA, Wards Placed, Damage Taken, CS per 10, Ally/Enemy Drakes, Ally/Enemy Barons et al.
 
 
 [BUG FIXES]:
@@ -29,7 +12,8 @@ it shows these stats for the next 3 minutes, otherwise is exits back to the orig
 - Sometimes after a game ended and the program went to search for a new game, it would re-find the game just exited, this has hopefully been fixed.
 [12TH MARCH 2015]:
 - Fixed errors where the program would crash if a champion wasn't recognised (e.g. after a new patch).  
-
+[26TH MAY 2015]:
+- System now deals with status errors sent back by Riot, which would cause anomalous behaviour before. 
 
 
 
