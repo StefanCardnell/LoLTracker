@@ -15,6 +15,8 @@ README:
 - Fixed errors where the program would crash if a champion wasn't recognised (e.g. after a new patch).  
 [26TH MAY 2015]:
 - System now deals with status errors sent back by Riot, which would cause anomalous behaviour before. 
+[30TH MAY 2015]:
+- Fixed an issue where league/division wasn't shown properly in Hexakill game-mode. 
 
 
 
