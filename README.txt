@@ -17,6 +17,8 @@ README:
 - System now deals with status errors sent back by Riot, which would cause anomalous behaviour before. 
 [30TH MAY 2015]:
 - Fixed an issue where league/division wasn't shown properly in Hexakill game-mode. 
+[21ST JUNE 2015]:
+- Fixed a bug where program would crash when searching for post-game stats. 
 
 
 
