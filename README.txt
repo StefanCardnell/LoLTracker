@@ -1,6 +1,8 @@
 README:
 
 - This system is designed for UNIX. It will not port (correctly) to Windows. 
+- I AM A PROGRAMMING NOOB! The source code is probably inefficient and is largely uncommented, while the program itself could be
+riddled with bugs. 
 
 
 
@@ -99,3 +101,12 @@ If a game is not found, it will the say that the player is not in a game until a
 - Hope to find a way so that name/server/display can be added to a text file and there will be no need for input (stdio and ncurses don't go well together).
 
 
+[USING THE SOURCE CODE!]
+
+- I have added the source code for compiling your own version of the program. 
+
+- Before compiling you will need JSONCPP, ncursesw and libcurl manually downloaded, and then linked in the compilation (see [To use the program] above to understand how to get these). 
+
+- You must compile CurrentGameLoopJSONPiInput.cpp with CurentGameFunctionsJSON.cpp while also linking the appropriate libraries. e.g.
+
+g++ -std=c++0x -o input -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ -lcurl -ljsoncpp -lncursesw CurrentGameLoopJSONPiInput.cpp CurrentGameFunctionsJSON.cpp
