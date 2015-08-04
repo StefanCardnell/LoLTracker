@@ -1,63 +1,50 @@
-//REQUIRES INSTALLATION OF CURL LIBRARY. ALSO IS INTENDED FOR WINDOWS SYSTEMS.
-//g++ -std=c++0x -o main -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ -L/usr/lib/ -L/usr/local/lib -L/usr/lib/ar-linux-gnueabihf -lncurses -lcurl -ljsoncpp CurrentGameLoopJSONPiInput.cpp CurrentGameLoopFunctionsJSON.cpp
+//REQUIRES INSTALLATION OF CURL LIBRARY. THIS VERSION IS FOR UNIX.
 
-//g++ -std=c++0x -o test -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ -lcurl -ljsoncpp -lncursesw test.cpp CurrentGameFunctionsJSON.cpp
-//USE THIS FOR WCHAR^^
+//g++ -std=c++11 -o noinput -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ CurrentGameLoopJSONPi.cpp CurrentGameFunctionsJSON.cpp -lcurl -lncursesw -ljsoncpp
+
+//-l will automatically use lib<name>.so files if it finds them.
+//to statically link jsoncpp, add "-Wl,-static -ljsoncpp -Wl,-Bdynamic -lcurl -lncursesw" to the end (while removing earlier links)
 
 #define _XOPEN_SOURCE_EXTENDED //needed to get ncurses to display wchar, see http://www.roguebasin.com/index.php?title=Ncursesw
 #define CURL_STATICLIB
 
+#include <fstream>
 #include <string>
 #include <vector>
-#include <curl/curl.h>
+#include <map>
 #include <iomanip> //for setw
-#include <json/json.h>
-#include <fstream>
+#include <cstring> //needed for strlen
 #include <unistd.h> //for sleep()
-#include <ncursesw/curses.h> //extended ncurses library to display wchar
-#include <string.h>
 #include <sys/time.h>
+#include <curl/curl.h>
+#include <json/json.h>
+#include <ncursesw/curses.h> //extended ncurses library to display wchar
+#include "Functions.h"
 
 using namespace std;
 
+const map<string, string> queues = {{"0", "Custom Game"}, {"2", "Normal 5v5 Blind Pick"}, {"7", "Coop vs AI"},
+                                    {"31", "Coop vs AI Intro"}, {"32", "Coop vs AI Beginner"}, {"33", "Coop vs AI Intermediate"},
+                                    {"8", "Normal 3v3"}, {"14", "Normal 5v5 Draft Pick"}, {"16", "Dominion 5v5 Blind Pick"},
+                                    {"17", "Dominion 5v5 Draft Pick"}, {"25", "Dominion Coop vs AI"}, {"4", "Ranked Solo 5v5"},
+                                    {"9", "Ranked Duo 3v3"}, {"6", "Ranked Duo 5v5"}, {"41", "Ranked Team 3v3"},
+                                    {"42", "Ranked Team 5v5"}, {"52", "Twisted Treeline Coop vs AI"}, {"61", "Teambuilder"},
+                                    {"65", "ARAM"}, {"70", "One for all"}, {"72", "Snowdown Showdown 1v1"},
+                                    {"73", "Snowdown Showdown 2v2"}, {"75", "SR 6x6 Hexakill"}, {"76", "URF"},
+                                    {"83", "URF against AI"}, {"91", "Doom Bots Rank 1"}, {"92", "Doom Bots Rank 2"},
+                                    {"93", "Doom Bots Rank 5"}, {"96", "Ascension"}, {"98", "Twisted Treeline 6x6 Hexakill"},
+                                    {"300", "King Poro"}, {"310", "Nemesis Pick"}, {"100", "Butcher's Bridge ARAM"},
+                                    {"313", "Black Market Brawlers"}
+                                   };
 
 
-struct qtype{
-    qtype() = default;
-    qtype(string a, string b): configid(a), description(b) { }
-    string configid;
-    string description;
-};
 
-const vector<qtype> queues = {qtype("0", "Custom Game"), qtype("2", "Normal 5v5 Blind Pick"), qtype("7", "Coop vs AI"),
-                  qtype("31", "Coop vs AI Intro"), qtype("32", "Coop vs AI Beginner"), qtype("33", "Coop vs AI Intermediate"),
-                  qtype("8", "Normal 3v3"), qtype("14", "Normal 5v5 Draft Pick"), qtype("16", "Dominion 5v5 Blind Pick"),
-                  qtype("17", "Dominion 5v5 Draft Pick"), qtype("25", "Dominion Coop vs AI"), qtype("4", "Ranked Solo 5v5"),
-                  qtype("9", "Ranked Duo 3v3"), qtype("6", "Ranked Duo 5v5"), qtype("41", "Ranked Team 3v3"),
-                  qtype("42", "Ranked Team 5v5"), qtype("52", "Twisted Treeline Coop vs AI"), qtype("61", "Teambuilder"),
-                  qtype("65", "ARAM"), qtype("70", "One for all"), qtype("72", "Snowdown Showdown 1v1"),
-                  qtype("73", "Snowdown Showdown 2v2"), qtype("75", "SR 6x6 Hexakill"), qtype("76", "URF"),
-                  qtype("83", "URF against AI"), qtype("91", "Doom Bots Rank 1"), qtype("92", "Doom Bots Rank 2"),
-                  qtype("93", "Doom Bots Rank 5"), qtype("96", "Ascension"), qtype("98", "Twisted Treeline 6x6 Hexakill"),
-                  qtype("300", "King Poro"), qtype("310", "Nemesis Pick")};
-
-struct serverplatform{
-    serverplatform() = default;
-    serverplatform(string a, string b): servername(a), platformid(b) { }
-    string servername;
-    string platformid;
-};
-
-const vector<serverplatform> serverlist = {serverplatform("na", "NA1"), serverplatform("br", "BR1"), serverplatform("lan", "LA1"),
-                                            serverplatform("las", "LA2"), serverplatform("ru", "RU"), serverplatform("tr", "TR1"),
-                                            serverplatform("eune", "EUN1"), serverplatform("euw", "EUW1"), serverplatform("kr", "KR"),
-                                            serverplatform("oce", "OC1") };
-
-
-extern string data;
-size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up);
-string standardise(string name);
-string capitalised(string name);
+const map<string, string> serverlist = {{"na", "NA1"}, {"br", "BR1"}, {"lan", "LA1"},
+                                        {"las", "LA2"}, {"ru", "RU"}, {"tr", "TR1"},
+                                        {"eune", "EUN1"}, {"euw", "EUW1"}, {"kr", "KR"},
+                                        {"oce", "OC1"}
+                                       };
+string data;
 
 
 
@@ -72,9 +59,12 @@ int main(){
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
 
-    string name, server, displayanswer, key, platformid;
+    string name = "antielephantmine", server = "euw", displayanswer = "n", key;
 
-    ifstream keyinput("key.txt"); //change this for portability
+    makeStandardised(name);
+    makeStandardised(server);
+
+    ifstream keyinput("key.txt");
     if(!keyinput.is_open()){
         cout << "key.txt could not be found. Exiting..." << endl;
         sleep(5);
@@ -90,61 +80,36 @@ int main(){
     getmaxyx(stdscr, row, col);
     refresh();
 
-    erase();
-    string output = "Enter the summoner name: ";
-    mvprintw(row/2 -1, (col-output.size())/2, output.c_str());
-    move(row/2, (col-output.size())/2);
-    refresh();
-    char nameinput[100];
-    getstr(nameinput);
-    name = nameinput;
-
-    erase();
-    while(true){
-    	output = "Enter server: (e.g. euw, las, na, br) ";
-    	mvprintw(row/2 -1, (col-output.size())/2, output.c_str());
-    	move(row/2, (col-output.size())/2);
-    	refresh();
-    	char serverinput[100];
-        getstr(serverinput);
-    	server = serverinput;
-        for(auto c : serverlist)
-            if(standardise(server) == c.servername)
-                    platformid = c.platformid;
-        if(platformid == ""){
-	    erase();
-	    output = "Server entered not valid.";
-            mvprintw(row/2 - 2, (col-output.size())/2, output.c_str());
-            continue;
-        }
-        break;
-    }
-
-    erase();
-    output = "Show summoner names? (not for small screens)";
-    mvprintw(row/2 -1, (col-output.size())/2, output.c_str());
-    move(row/2, (col-output.size())/2);
-    refresh();
-    char displayinput[100];
-    getstr(displayinput);
-    displayanswer = displayinput;
-
     long long prevgameid = -1;
+
 
     while(true){
 
         beginning:
 
 
+        string platformid;
         string gametype = "UNRECORDED GAMETYPE";
         string url;
+
+        if(serverlist.find(server) != serverlist.end()) platformid = serverlist.find(server)->second;
+        else{
+            erase();
+            string error = "Server entered not valid. Exiting...";
+            mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
+            refresh();
+            sleep(10);
+            endwin();
+            return 0;
+        }
+
 
 
         //BELOW: OBTAIN SUMMONER ID
 
 
 
-        url = "https://" + standardise(server) + ".api.pvp.net/api/lol/" + standardise(server) + "/v1.4/summoner/by-name/" + standardise(name) + key;
+        url = "https://" + server + ".api.pvp.net/api/lol/" + server + "/v1.4/summoner/by-name/" + name + key;
 
         Json::Value sumname;
         Json::Reader reader;
@@ -176,8 +141,8 @@ int main(){
             erase();
             string error = "Error code: " + to_string(sumname["status"]["status_code"].asInt());
             mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
-            error = sumname["status"]["message"].asString() + ".";
-            mvprintw(row/2, (col-error.size())/2, error.c_str());
+            error = sumname["status"]["message"].asString();
+            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
             refresh();
             sleep(60);
             continue;
@@ -191,8 +156,8 @@ int main(){
         //BELOW: OBTAIN GAME INFO
 
 
-        url = "https://" + standardise(server) + ".api.pvp.net/observer-mode/rest/consumer/getSpectatorGameInfo/"
-                         + platformid + "/" + to_string(sumname[standardise(name)]["id"].asInt64()) + key;
+        url = "https://" + server + ".api.pvp.net/observer-mode/rest/consumer/getSpectatorGameInfo/"
+                         + platformid + "/" + to_string(sumname[name]["id"].asInt64()) + key;
 
         Json::Value gameinfo;
 
@@ -207,11 +172,13 @@ int main(){
             continue;
         }
 
+
+
         reader.parse(data, gameinfo);
 
         if(gameinfo.empty() || gameinfo["gameId"].asInt64() == prevgameid){
             erase();
-            string error = (sumname[standardise(name)]["name"].asString() + " (" + capitalised(server) + ") " + "is not in a game.");
+            string error = (sumname[name]["name"].asString() + " (" + returnCapitalised(server) + ") " + "is not in a game.");
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
             refresh();
             sleep(30);
@@ -230,11 +197,12 @@ int main(){
 
 
 
+
+
         //BELOW: WORK OUT GAME TYPE
 
 
-        for(auto c : queues)
-            if(to_string(gameinfo["gameQueueConfigId"].asInt()) == c.configid) gametype = c.description;
+        if(queues.find(to_string(gameinfo["gameQueueConfigId"].asInt())) != queues.end()) gametype = queues.find(to_string(gameinfo["gameQueueConfigId"].asInt()))->second; //so gametype remains UNRECORDED if it doesn't exist
 
         unsigned participantNo = 0;
 
@@ -242,13 +210,11 @@ int main(){
             ++participantNo;
 
 
-
-
         //BELOW: OBTAIN CHAMPIONID INFO
 
 
 
-        url = "https://global.api.pvp.net/api/lol/static-data/" + standardise(server) + "/v1.2/champion" + key;
+        url = "https://global.api.pvp.net/api/lol/static-data/" + server + "/v1.2/champion" + key;
 
         Json::Value championinfo;
 
@@ -262,6 +228,8 @@ int main(){
             sleep(60);
             continue;
         }
+
+
 
         reader.parse(data, championinfo);
 
@@ -277,15 +245,11 @@ int main(){
         }
 
 
-
-
         //BELOW: OBTAIN LEAGUE INFO
-
-
 
         Json::Value leagueinfo;
 
-        string urlStart = "https://" + standardise(server) + ".api.pvp.net/api/lol/" + standardise(server) + "/v2.5/league/by-summoner/";
+        string urlStart = "https://" + server + ".api.pvp.net/api/lol/" + server + "/v2.5/league/by-summoner/";
         string urlAppend;
         unsigned playerCount = 0;
 
@@ -325,9 +289,9 @@ int main(){
                 }
 
                 leagueinfo.append(tempLeague);
+
             }
         }
-
 
         string nameoutput; //for later
         string output;
@@ -345,21 +309,20 @@ int main(){
                 for(auto e : championinfo["data"])
                     if(c["championId"] == e["id"])
                         c["champname"] = e["name"];
-                if(c["summonerId"] == sumname[standardise(name)]["id"]){
+                if(c["summonerId"] == sumname[name]["id"]){
                     nameoutput = "\"" + c["summonerName"].asString() + "\"" + " as " + c["champname"].asString()
                                   + " (" + (c["teamId"].asInt() == 100? "Blue Team" : "Purple Team")
                                   + ")";
-                    sumname[standardise(name)]["fullname"] = c["summonerName"];
-                    sumname[standardise(name)]["champion"] = c["champname"];
-                    sumname[standardise(name)]["teamId"] = c["teamId"];
+                    sumname[name]["fullname"] = c["summonerName"];
+                    sumname[name]["champion"] = c["champname"];
+                    sumname[name]["teamId"] = c["teamId"];
                 }
             }
         }
 
         prevgameid = gameinfo["gameId"].asInt64();
 
-
-        //OUTPUT FORMATTING NEXT
+        //OUTPUT AND FORMATTING NEXT
 
         bool display = (tolower(displayanswer[0]) == 'y');
         unsigned maxlengthA = 0, maxlengthB = 0, maxlength;
@@ -410,9 +373,6 @@ int main(){
 
             }
 
-
-
-
             if(maxlengthA == 0) maxlengthA = 15;
             if(maxlengthB == 0) maxlengthB = 15;
             maxlength = maxlengthA + 5 + maxlengthB;
@@ -462,6 +422,8 @@ int main(){
             }
 
 
+
+
             int i = 0;
             while(i < 30){ //GAMETIME PRINTING
                 timeval timestamp;
@@ -484,8 +446,8 @@ int main(){
                 ++i;
             }
 
-            url = "https://" + standardise(server) + ".api.pvp.net/observer-mode/rest/consumer/getSpectatorGameInfo/"
-                             + platformid + "/" + to_string(sumname[standardise(name)]["id"].asInt64()) + key;
+            url = "https://" + server + ".api.pvp.net/observer-mode/rest/consumer/getSpectatorGameInfo/"
+                             + platformid + "/" + to_string(sumname[name]["id"].asInt64()) + key;
 
             data = "";
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -498,7 +460,6 @@ int main(){
 
 
             Json::Value temp;
-
 
             reader.parse(data, temp);
 
@@ -520,6 +481,7 @@ int main(){
         int tries = 0;
         curs_set(1);
 
+
         do{
             if(tries >= 6){
                 erase();
@@ -537,8 +499,8 @@ int main(){
             sleep(20);
 
 
-            url = "https://" + standardise(server) + ".api.pvp.net/api/lol/" + standardise(server)
-                             + "/v1.3/game/by-summoner/" + to_string(sumname[standardise(name)]["id"].asInt64())
+            url = "https://" + server + ".api.pvp.net/api/lol/" + server
+                             + "/v1.3/game/by-summoner/" + to_string(sumname[name]["id"].asInt64())
                              + "/recent" + key;
 
 
@@ -560,7 +522,7 @@ int main(){
 
 
 
-            url = "https://" + standardise(server) + ".api.pvp.net/api/lol/" + standardise(server)
+            url = "https://" + server + ".api.pvp.net/api/lol/" + server
                              + "/v2.2/match/" + to_string(gameinfo["gameId"].asInt64()) + key;
 
             data = "";
@@ -605,13 +567,13 @@ int main(){
                         output = "Name:";
                         mvprintw((row/2)-(printlines/2), (col-widthsize)/2, output.c_str());
 
-                        output = "\"" + sumname[standardise(name)]["fullname"].asString() + "\"";
+                        output = "\"" + sumname[name]["fullname"].asString() + "\"";
                         mvprintw((row/2)-(printlines/2), (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
                         output = "Champion:";
                         mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2, output.c_str());
 
-                        output = sumname[standardise(name)]["champion"].asString();
+                        output = sumname[name]["champion"].asString();
                         mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
                         output = "Game Mode:";
@@ -690,7 +652,7 @@ int main(){
                         int allydrake, allybaron;
 
                         for(auto c : postgameadditional["teams"]){
-                            if(c["teamId"] == sumname[standardise(name)]["teamId"]){
+                            if(c["teamId"] == sumname[name]["teamId"]){
                                 allydrake = c["dragonKills"].asInt();
                                 allybaron = c["baronKills"].asInt();
                             }

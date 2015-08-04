@@ -1,14 +1,13 @@
 README:
 
 - This system is designed for UNIX. It will not port (correctly) to Windows. 
-- I AM A PROGRAMMING NOOB! The source code is probably inefficient and is largely uncommented, while the program itself could be
-riddled with bugs. 
+- I AM A PROGRAMMING NOOB! The source code is probably inefficient and is largely uncommented, while the program itself could be riddled with bugs. 
 
 
 
 
 
-[BUG FIXES]:
+[BUG FIXES/UPDATES]:
 
 [11TH MARCH 2015]:
 - If connection errors occured then the program would exit, this has now hopefully been fixed.
@@ -21,7 +20,9 @@ riddled with bugs.
 - Fixed an issue where league/division wasn't shown properly in Hexakill game-mode. 
 [21ST JUNE 2015]:
 - Fixed a bug where program would crash when searching for post-game stats. 
-
+[4TH AUGUST 2015]:
+- Improved source code somewhat.
+- Updated to include Butcher's Bridge gamemodes. 
 
 
 
@@ -32,8 +33,7 @@ riddled with bugs.
 
 DOWNLOAD THE APPROPRIATE LIBRARIES!
 
-Unfortunately a few external libraries are needed to get this to run: libcurl, JSON and ncursesw. Make sure to update your cache and
-run these two commands:
+Unfortunately a few external libraries are needed to get this to run: libcurl, JSON and ncursesw. Make sure to update your cache and run these two commands:
 
 sudo apt-get install libjsoncpp-dev
 sudo apt-get install libncursesw5-dev
@@ -73,8 +73,7 @@ After that:
 
 2) If the player on the server is not found, the program will exit.
 
-3) If the player on the server is found, it will search for their current game. If a game is found it will display current game data.
-If a game is not found, it will the say that the player is not in a game until a game is found.
+3) If the player on the server is found, it will search for their current game. If a game is found it will display current game data. If a game is not found, it will the say that the player is not in a game until a game is found.
 
 4) When the game ends, the program attempts to receive post-game data for two minutes. If it is found it will display it for three minutes.
 
@@ -107,6 +106,10 @@ If a game is not found, it will the say that the player is not in a game until a
 
 - Before compiling you will need JSONCPP, ncursesw and libcurl manually downloaded, and then linked in the compilation (see [To use the program] above to understand how to get these). 
 
-- You must compile CurrentGameLoopJSONPiInput.cpp with CurentGameFunctionsJSON.cpp while also linking the appropriate libraries. e.g.
+- You must compile CurrentGameLoopJSONPiInput.cpp with CurentGameFunctionsJSON.cpp while also linking the appropriate libraries. e.g. 
 
-g++ -std=c++0x -o input -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ -lcurl -ljsoncpp -lncursesw CurrentGameLoopJSONPiInput.cpp CurrentGameFunctionsJSON.cpp
+g++ -std=c++0x -o input -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/  CurrentGameLoopJSONPiInput.cpp CurrentGameFunctionsJSON.cpp -lcurl -ljsoncpp -lncursesw
+
+- (replace -std=c++0x with -std=c++11 if your compiler can support it)
+
+- The header file Functions.h must be in the same directory as the source code. 
