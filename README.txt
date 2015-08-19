@@ -4,31 +4,6 @@ README:
 - I AM A PROGRAMMING NOOB! The source code is probably inefficient and is largely uncommented, while the program itself could be riddled with bugs. 
 
 
-
-
-
-[BUG FIXES/UPDATES]:
-
-[11TH MARCH 2015]:
-- If connection errors occured then the program would exit, this has now hopefully been fixed.
-- Sometimes after a game ended and the program went to search for a new game, it would re-find the game just exited, this has hopefully been fixed.
-[12TH MARCH 2015]:
-- Fixed errors where the program would crash if a champion wasn't recognised (e.g. after a new patch).  
-[26TH MAY 2015]:
-- System now deals with status errors sent back by Riot, which would cause anomalous behaviour before. 
-[30TH MAY 2015]:
-- Fixed an issue where league/division wasn't shown properly in Hexakill game-mode. 
-[21ST JUNE 2015]:
-- Fixed a bug where program would crash when searching for post-game stats. 
-[4TH AUGUST 2015]:
-- Improved source code somewhat.
-- Updated to include Butcher's Bridge gamemodes. 
-
-
-
-
-
-
 [TO USE THE PROGRAM] [IMPORTANT!!]:
 
 DOWNLOAD THE APPROPRIATE LIBRARIES!
@@ -81,15 +56,29 @@ After that:
 
 
 
-
-
-
-
 [ERROR-HANDLING]
 
 - If you run in to issues with the program, make sure you entered the API KEY in to key.txt correctly. 
 
 - Unlikely but the program may not work after game patches. This may fix itself after a day or two once riot updates their stuff.
+
+
+[BUG FIXES/UPDATES]:
+
+[11TH MARCH 2015]:
+- If connection errors occured then the program would exit, this has now hopefully been fixed.
+- Sometimes after a game ended and the program went to search for a new game, it would re-find the game just exited, this has hopefully been fixed.
+[12TH MARCH 2015]:
+- Fixed errors where the program would crash if a champion wasn't recognised (e.g. after a new patch).  
+[26TH MAY 2015]:
+- System now deals with status errors sent back by Riot, which would cause anomalous behaviour before. 
+[30TH MAY 2015]:
+- Fixed an issue where league/division wasn't shown properly in Hexakill game-mode. 
+[21ST JUNE 2015]:
+- Fixed a bug where program would crash when searching for post-game stats. 
+[4TH AUGUST 2015]:
+- Improved source code somewhat.
+- Updated to include Butcher's Bridge gamemodes. 
 
 
 

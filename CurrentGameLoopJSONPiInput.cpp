@@ -1,6 +1,6 @@
 //REQUIRES INSTALLATION OF CURL LIBRARY. THIS VERSION IS FOR UNIX.
 
-//g++ -std=c++11 -o noinput -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/ CurrentGameLoopJSONPi.cpp CurrentGameFunctionsJSON.cpp -lcurl -lncursesw -ljsoncpp
+//g++ -std=c++11 -o input -I/usr/local/include -I/usr/include -I/usr/include/jsoncpp/  CurrentGameLoopJSONPiInput.cpp CurrentGameFunctionsJSON.cpp -lcurl -lncursesw -ljsoncpp
 
 //-l will automatically use lib<name>.so files if it finds them.
 //to statically link jsoncpp, add "-Wl,-static -ljsoncpp -Wl,-Bdynamic -lcurl -lncursesw" to the end (while removing earlier links)
@@ -48,6 +48,7 @@ string data;
 
 
 
+
 int main(){
 
     setlocale(LC_ALL, ""); //for ncurses to display wchar
@@ -59,15 +60,11 @@ int main(){
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
 
-    string name = "antielephantmine", server = "euw", displayanswer = "n", key;
+    string name, server, displayanswer, key, platformid;
 
-    makeStandardised(name);
-    makeStandardised(server);
-
-    ifstream keyinput("key.txt");
-    if(!keyinput.is_open()){
+    ifstream keyinput("key.txt"); //change this for portability
+    if(!keyinput){
         cout << "key.txt could not be found. Exiting..." << endl;
-        sleep(5);
         return 0;
     }
 
@@ -80,29 +77,54 @@ int main(){
     getmaxyx(stdscr, row, col);
     refresh();
 
-    long long prevgameid = -1;
+    erase();
+    string output = "Enter the summoner name: ";
+    mvprintw(row/2 -1, (col-output.size())/2, output.c_str());
+    move(row/2, (col-output.size())/2);
+    refresh();
+    char nameinput[100];
+    getstr(nameinput);
+    name = nameinput;
+    makeStandardised(name);
 
+    erase();
+    while(true){
+    	output = "Enter server: (e.g. euw, las, na, br) ";
+    	mvprintw(row/2 -1, (col-output.size())/2, output.c_str());
+    	move(row/2, (col-output.size())/2);
+    	refresh();
+    	char serverinput[100];
+        getstr(serverinput);
+    	server = serverinput;
+    	makeStandardised(server);
+    	if(serverlist.find(server) != serverlist.end()) platformid = serverlist.find(server)->second;
+        else{
+            erase();
+            output = "Server entered not valid.";
+            mvprintw(row/2 - 2, (col-output.size())/2, output.c_str());
+            continue;
+        }
+        break;
+    }
+
+    erase();
+    output = "Show summoner names? (not for small screens)";
+    mvprintw(row/2 -1, (col-output.size())/2, output.c_str());
+    move(row/2, (col-output.size())/2);
+    refresh();
+    char displayinput[100];
+    getstr(displayinput);
+    displayanswer = displayinput;
+
+    long long prevgameid = -1;
 
     while(true){
 
         beginning:
 
 
-        string platformid;
         string gametype = "UNRECORDED GAMETYPE";
         string url;
-
-        if(serverlist.find(server) != serverlist.end()) platformid = serverlist.find(server)->second;
-        else{
-            erase();
-            string error = "Server entered not valid. Exiting...";
-            mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
-            refresh();
-            sleep(10);
-            endwin();
-            return 0;
-        }
-
 
 
         //BELOW: OBTAIN SUMMONER ID
@@ -141,8 +163,8 @@ int main(){
             erase();
             string error = "Error code: " + to_string(sumname["status"]["status_code"].asInt());
             mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
-            error = sumname["status"]["message"].asString();
-            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
+            error = sumname["status"]["message"].asString() + ".";
+            mvprintw(row/2, (col-error.size())/2, error.c_str());
             refresh();
             sleep(60);
             continue;
@@ -172,8 +194,6 @@ int main(){
             continue;
         }
 
-
-
         reader.parse(data, gameinfo);
 
         if(gameinfo.empty() || gameinfo["gameId"].asInt64() == prevgameid){
@@ -197,8 +217,6 @@ int main(){
 
 
 
-
-
         //BELOW: WORK OUT GAME TYPE
 
 
@@ -208,6 +226,8 @@ int main(){
 
         for(auto c : gameinfo["participants"])
             ++participantNo;
+
+
 
 
         //BELOW: OBTAIN CHAMPIONID INFO
@@ -229,8 +249,6 @@ int main(){
             continue;
         }
 
-
-
         reader.parse(data, championinfo);
 
         if(!championinfo["status"]["status_code"].isNull()){
@@ -245,7 +263,11 @@ int main(){
         }
 
 
+
+
         //BELOW: OBTAIN LEAGUE INFO
+
+
 
         Json::Value leagueinfo;
 
@@ -289,9 +311,9 @@ int main(){
                 }
 
                 leagueinfo.append(tempLeague);
-
             }
         }
+
 
         string nameoutput; //for later
         string output;
@@ -322,7 +344,8 @@ int main(){
 
         prevgameid = gameinfo["gameId"].asInt64();
 
-        //OUTPUT AND FORMATTING NEXT
+
+        //OUTPUT FORMATTING NEXT
 
         bool display = (tolower(displayanswer[0]) == 'y');
         unsigned maxlengthA = 0, maxlengthB = 0, maxlength;
@@ -373,6 +396,9 @@ int main(){
 
             }
 
+
+
+
             if(maxlengthA == 0) maxlengthA = 15;
             if(maxlengthB == 0) maxlengthB = 15;
             maxlength = maxlengthA + 5 + maxlengthB;
@@ -422,8 +448,6 @@ int main(){
             }
 
 
-
-
             int i = 0;
             while(i < 30){ //GAMETIME PRINTING
                 timeval timestamp;
@@ -461,6 +485,7 @@ int main(){
 
             Json::Value temp;
 
+
             reader.parse(data, temp);
 
             if(temp.empty())
@@ -480,7 +505,6 @@ int main(){
         bool found = false;
         int tries = 0;
         curs_set(1);
-
 
         do{
             if(tries >= 6){
