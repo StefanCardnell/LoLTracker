@@ -224,8 +224,10 @@ int main(){
 
         unsigned participantNo = 0;
 
-        for(auto c : gameinfo["participants"])
+        for(auto c : gameinfo["participants"]){
             ++participantNo;
+            if(c["summonerId"] == sumname[name]["id"]) sumname[name]["participantId"] = participantNo;
+        }
 
 
 
@@ -522,30 +524,6 @@ int main(){
             refresh();
             sleep(20);
 
-
-            url = "https://" + server + ".api.pvp.net/api/lol/" + server
-                             + "/v1.3/game/by-summoner/" + to_string(sumname[name]["id"].asInt64())
-                             + "/recent" + key;
-
-
-            data = "";
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            while(curl_easy_perform(curl) != CURLE_OK){
-                erase();
-                string error = "Connection error. Waiting a minute...";
-                mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
-                refresh();
-                data = "";
-                sleep(60);
-                continue;
-            }
-
-            Json::Value postgame;
-
-            reader.parse(data, postgame);
-
-
-
             url = "https://" + server + ".api.pvp.net/api/lol/" + server
                              + "/v2.2/match/" + to_string(gameinfo["gameId"].asInt64()) + key;
 
@@ -561,151 +539,134 @@ int main(){
                 continue;
             }
 
-            Json::Value postgameadditional;
-
-            reader.parse(data, postgameadditional);
-
-
-
+            Json::Value postgame;
+            reader.parse(data, postgame);
 
             ++tries;
 
-            if(!postgame.empty() && !postgameadditional.empty()){
-                if(!postgame["status"]["status_code"].isNull() || !postgameadditional["status"]["status_code"].isNull())
+            if(!postgame.empty()){
+
+                if(!postgame["status"]["status_code"].isNull())
                     continue;
-                for(auto c : postgame["games"]){
-                    if(c["gameId"] == gameinfo["gameId"]){
-                        erase();
-                        found = true;
-                        int gameminutes = c["stats"]["timePlayed"].asInt()/60;
-                        int gameseconds = c["stats"]["timePlayed"].asInt() - (60*gameminutes);
 
-                        int tempwidth = (25 > (11 + gametype.size()) ? 25 : 11 + gametype.size());
-                        int widthsize = (tempwidth > 0.75*col ? tempwidth : 0.75*col);
-                        int printlines = 16; // number of stats to print, change parenthesis for height
+                erase();
+                found = true;
+                int gameminutes = postgame["matchDuration"].asInt()/60;
+                int gameseconds = postgame["matchDuration"].asInt() - (60*gameminutes);
 
+                int tempwidth = (25 > (11 + gametype.size()) ? 25 : 11 + gametype.size());
+                int widthsize = (tempwidth > 0.75*col ? tempwidth : 0.75*col);
+                int printlines = 16; // number of stats to print, change parenthesis for height
 
-                        int outputint;
-                        double outputdouble;
+                int outputint;
+                double outputdouble;
 
-                        output = "Name:";
-                        mvprintw((row/2)-(printlines/2), (col-widthsize)/2, output.c_str());
+                output = "Name:";
+                mvprintw((row/2)-(printlines/2), (col-widthsize)/2, output.c_str());
+                output = "\"" + sumname[name]["fullname"].asString() + "\"";
+                mvprintw((row/2)-(printlines/2), (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                        output = "\"" + sumname[name]["fullname"].asString() + "\"";
-                        mvprintw((row/2)-(printlines/2), (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+                output = "Champion:";
+                mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2, output.c_str());
+                output = sumname[name]["champion"].asString();
+                mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                        output = "Champion:";
-                        mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2, output.c_str());
+                output = "Game Mode:";
+                mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2, output.c_str());
+                output = gametype;
+                mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                        output = sumname[name]["champion"].asString();
-                        mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+                output = "Game Length:";
+                mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2, output.c_str());
+                output = (gameminutes  < 10 ? "0" : "") + to_string(gameminutes) + ":" + (gameseconds < 10 ? "0" : "") + to_string(gameseconds);
+                mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                        output = "Game Mode:";
-                        mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2, output.c_str());
-
-                        output = gametype;
-                        mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
-
-                        output = "Game Length:";
-                        mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2, output.c_str());
-
-                        output = (gameminutes  < 10 ? "0" : "") + to_string(gameminutes) + ":" + (gameseconds < 10 ? "0" : "") + to_string(gameseconds);
-                        mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+                for(auto c : postgame["participants"]){
+                    if(c["participantId"].asInt() == sumname[name]["participantId"].asInt()){ //compares unsigned and signed and so asInt() is needed
 
                         output = "Status:";
                         mvprintw((row/2)-(printlines/2) + 4, (col-widthsize)/2, output.c_str());
-
-                        output = (c["stats"]["win"].asInt() == 1 ? "VICTORY" : "DEFEAT");
+                        output = (c["stats"]["winner"].asInt() == 1 ? "VICTORY" : "DEFEAT");
                         mvprintw((row/2)-(printlines/2) + 4, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
                         output = "KDA:";
                         mvprintw((row/2)-(printlines/2) + 5, (col-widthsize)/2, output.c_str());
-
-                        output = to_string(c["stats"]["championsKilled"].asInt()) + "/" + to_string(c["stats"]["numDeaths"].asInt()) + "/" + to_string(c["stats"]["assists"].asInt());
+                        output = to_string(c["stats"]["kills"].asInt()) + "/" + to_string(c["stats"]["deaths"].asInt()) + "/" + to_string(c["stats"]["assists"].asInt());
                         mvprintw((row/2)-(printlines/2) + 5, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
                         output = "Gold Earned:";
                         mvprintw((row/2)-(printlines/2) + 6, (col-widthsize)/2, output.c_str());
-
                         outputint = c["stats"]["goldEarned"].asInt();
                         mvprintw((row/2)-(printlines/2) + 6, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
                         output = "Minions Killed:";
                         mvprintw((row/2)-(printlines/2) + 7, (col-widthsize)/2, output.c_str());
-
                         outputint = c["stats"]["minionsKilled"].asInt() + c["stats"]["neutralMinionsKilled"].asInt();
                         mvprintw((row/2)-(printlines/2) + 7, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
                         output = "CS per 10:";
                         mvprintw((row/2)-(printlines/2) + 8, (col-widthsize)/2, output.c_str());
-
-                        outputdouble = 600*(static_cast<double>(c["stats"]["minionsKilled"].asInt() + c["stats"]["neutralMinionsKilled"].asInt())/(c["stats"]["timePlayed"].asInt()));
+                        outputdouble = 600*(static_cast<double>(c["stats"]["minionsKilled"].asInt() + c["stats"]["neutralMinionsKilled"].asInt())/(postgame["matchDuration"].asInt()));
                         mvprintw((row/2)-(printlines/2) + 8, (col-widthsize)/2 + widthsize - to_string(int(outputdouble)).size() - 3, "%.2f", outputdouble);
 
                         output = "Wards Placed:";
                         mvprintw((row/2)-(printlines/2) + 9, (col-widthsize)/2, output.c_str());
-
-                        outputint = c["stats"]["wardPlaced"].asInt();
+                        outputint = c["stats"]["wardsPlaced"].asInt();
                         mvprintw((row/2)-(printlines/2) + 9, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
                         output = "Largest Killing Spree:";
                         mvprintw((row/2)-(printlines/2) + 10, (col-widthsize)/2, output.c_str());
-
                         outputint = c["stats"]["largestKillingSpree"].asInt();
                         mvprintw((row/2)-(printlines/2) + 10, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
                         output = "Largest Multi Kill:";
                         mvprintw((row/2)-(printlines/2) + 11, (col-widthsize)/2, output.c_str());
-
                         outputint = c["stats"]["largestMultiKill"].asInt();
                         mvprintw((row/2)-(printlines/2) + 11, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
                         output = "Damage Dealt:";
                         mvprintw((row/2)-(printlines/2) + 12, (col-widthsize)/2, output.c_str());
-
-                        outputint = c["stats"]["totalDamageDealt"].asInt();
+                        outputint = c["stats"]["totalDamageDealtToChampions"].asInt();
                         mvprintw((row/2)-(printlines/2) + 12, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
                         output = "Damage Taken:";
                         mvprintw((row/2)-(printlines/2) + 13, (col-widthsize)/2, output.c_str());
-
                         outputint = c["stats"]["totalDamageTaken"].asInt();
                         mvprintw((row/2)-(printlines/2) + 13, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
-
-                        int enemydrake, enemybaron;
-                        int allydrake, allybaron;
-
-                        for(auto c : postgameadditional["teams"]){
-                            if(c["teamId"] == sumname[name]["teamId"]){
-                                allydrake = c["dragonKills"].asInt();
-                                allybaron = c["baronKills"].asInt();
-                            }
-                            else{
-                                enemydrake = c["dragonKills"].asInt();
-                                enemybaron = c["baronKills"].asInt();
-                            }
-                        }
-
-                        output = "Ally/Enemy Drakes:";
-                        mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2, output.c_str());
-
-                        output = to_string(allydrake) + "/" + to_string(enemydrake);
-                        mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
-
-                        output = "Ally/Enemy Barons:";
-                        mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2, output.c_str());
-
-                        output = to_string(allybaron) + "/" + to_string(enemybaron);
-                        mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
-
-                        refresh();
-                        sleep(180);
-
                     }
                 }
+
+                int enemydrake, enemybaron;
+                int allydrake, allybaron;
+
+                for(auto c : postgame["teams"]){
+                    if(c["teamId"] == sumname[name]["teamId"]){
+                        allydrake = c["dragonKills"].asInt();
+                        allybaron = c["baronKills"].asInt();
+                    }
+                    else{
+                        enemydrake = c["dragonKills"].asInt();
+                        enemybaron = c["baronKills"].asInt();
+                    }
+                }
+
+                output = "Ally/Enemy Drakes:";
+                mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2, output.c_str());
+                output = to_string(allydrake) + "/" + to_string(enemydrake);
+                mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+
+                output = "Ally/Enemy Barons:";
+                mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2, output.c_str());
+                output = to_string(allybaron) + "/" + to_string(enemybaron);
+                mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+
+                refresh();
+                sleep(180);
+
             }
 
         }while(found == false);
+
 
 
 
