@@ -78,7 +78,10 @@ After that:
 - Fixed a bug where program would crash when searching for post-game stats. 
 [4TH AUGUST 2015]:
 - Improved source code somewhat.
-- Updated to include Butcher's Bridge gamemodes. 
+- Updated to include Butcher's Bridge gamemodes.
+[22ND APRIL 2016 - gee long time]:
+- Improved response to error codes. Fixed errors caused by Riot changing how response body shows errors.
+- Updated game types to include dynamic queue.
 
 
 
