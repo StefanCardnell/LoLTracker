@@ -27,14 +27,14 @@ const map<string, string> queues = {{"0", "Custom Game"}, {"2", "Normal 5v5 Blin
                                     {"31", "Coop vs AI Intro"}, {"32", "Coop vs AI Beginner"}, {"33", "Coop vs AI Intermediate"},
                                     {"8", "Normal 3v3"}, {"14", "Normal 5v5 Draft Pick"}, {"16", "Dominion 5v5 Blind Pick"},
                                     {"17", "Dominion 5v5 Draft Pick"}, {"25", "Dominion Coop vs AI"}, {"4", "Ranked Solo 5v5"},
-                                    {"9", "Ranked Duo 3v3"}, {"6", "Ranked Duo 5v5"}, {"41", "Ranked Team 3v3"},
+                                    {"9", "Ranked Premade 3v3"}, {"6", "Ranked Premade 5v5"}, {"41", "Ranked Team 3v3"},
                                     {"42", "Ranked Team 5v5"}, {"52", "Twisted Treeline Coop vs AI"}, {"61", "Teambuilder"},
                                     {"65", "ARAM"}, {"70", "One for all"}, {"72", "Snowdown Showdown 1v1"},
                                     {"73", "Snowdown Showdown 2v2"}, {"75", "SR 6x6 Hexakill"}, {"76", "URF"},
                                     {"83", "URF against AI"}, {"91", "Doom Bots Rank 1"}, {"92", "Doom Bots Rank 2"},
                                     {"93", "Doom Bots Rank 5"}, {"96", "Ascension"}, {"98", "Twisted Treeline 6x6 Hexakill"},
                                     {"300", "King Poro"}, {"310", "Nemesis Pick"}, {"100", "Butcher's Bridge ARAM"},
-                                    {"313", "Black Market Brawlers"}
+                                    {"313", "Black Market Brawlers"}, {"400", "Normal 5v5 Draft Pick"}, {"410", "Ranked 5v5 Draft Pick"}
                                    };
 
 
@@ -56,6 +56,10 @@ int main(){
     CURL* curl; //our curl object
     curl_global_init(CURL_GLOBAL_ALL); //pretty obvious
     curl = curl_easy_init();
+    if(!curl){
+        cout << "Error occurred initialising curl easy handle. Exiting..." << endl;
+        return 0;
+    }
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
@@ -132,14 +136,34 @@ int main(){
 
 
         url = "https://" + server + ".api.pvp.net/api/lol/" + server + "/v1.4/summoner/by-name/" + name + key;
-
-        Json::Value sumname;
-        Json::Reader reader;
-
-
         data = "";
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        if(curl_easy_perform(curl) != CURLE_OK){
+        if(curl_easy_perform(curl) == CURLE_OK){
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            if(response_code != 200){
+                if(response_code == 404){
+                    erase();
+                    string error = "No such player exists on this server.";
+                    mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
+                    refresh();
+                    sleep(5);
+                    endwin();
+                    return 0;
+                }
+                else{
+                    erase();
+                    string error = "Summoner information inaccessible.";
+                    mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+                    error = "Error code: " + to_string(response_code);
+                    mvprintw(row/2, (col-error.size())/2, error.c_str());
+                    refresh();
+                    sleep(60);
+                    continue;
+                }
+            }
+        }
+        else{
             erase();
             string error = "Connection error. Waiting a minute...";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
@@ -148,27 +172,10 @@ int main(){
             continue;
         }
 
+        Json::Value sumname;
+        Json::Reader reader;
         reader.parse(data, sumname);
 
-        if(sumname.empty()){
-            erase();
-            string error = "No such player exists on this server.";
-            mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
-            refresh();
-            sleep(5);
-            endwin();
-            return 0;
-        }
-        else if(!sumname["status"]["status_code"].isNull()){
-            erase();
-            string error = "Error code: " + to_string(sumname["status"]["status_code"].asInt());
-            mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
-            error = sumname["status"]["message"].asString() + ".";
-            mvprintw(row/2, (col-error.size())/2, error.c_str());
-            refresh();
-            sleep(60);
-            continue;
-        }
 
 
 
@@ -180,12 +187,33 @@ int main(){
 
         url = "https://" + server + ".api.pvp.net/observer-mode/rest/consumer/getSpectatorGameInfo/"
                          + platformid + "/" + to_string(sumname[name]["id"].asInt64()) + key;
-
-        Json::Value gameinfo;
-
         data = "";
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        if(curl_easy_perform(curl) != CURLE_OK){
+        if(curl_easy_perform(curl) == CURLE_OK){
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            if(response_code != 200){
+                if(response_code == 404){
+                    erase();
+                    string error = sumname[name]["name"].asString() + " (" + returnCapitalised(server) + ") " + "is not in a game.";
+                    mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
+                    refresh();
+                    sleep(30);
+                    continue;
+                }
+                else{
+                    erase();
+                    string error = "Game information inaccessible.";
+                    mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+                    error = "Error code: " + to_string(response_code);
+                    mvprintw(row/2, (col-error.size())/2, error.c_str());
+                    refresh();
+                    sleep(60);
+                    continue;
+                }
+            }
+        }
+        else{
             erase();
             string error = "Connection error. Waiting a minute...";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
@@ -194,24 +222,15 @@ int main(){
             continue;
         }
 
+        Json::Value gameinfo;
         reader.parse(data, gameinfo);
 
-        if(gameinfo.empty() || gameinfo["gameId"].asInt64() == prevgameid){
+        if(gameinfo["gameId"].asInt64() == prevgameid){
             erase();
-            string error = (sumname[name]["name"].asString() + " (" + returnCapitalised(server) + ") " + "is not in a game.");
+            string error = sumname[name]["name"].asString() + " (" + returnCapitalised(server) + ") " + "is not in a game.";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
             refresh();
             sleep(30);
-            continue;
-        }
-        else if(!gameinfo["status"]["status_code"].isNull()){
-            erase();
-            string error = "Error code: " + to_string(gameinfo["status"]["status_code"].asInt());
-            mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
-            error = gameinfo["status"]["message"].asString();
-            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
-            refresh();
-            sleep(60);
             continue;
         }
 
@@ -237,12 +256,23 @@ int main(){
 
 
         url = "https://global.api.pvp.net/api/lol/static-data/" + server + "/v1.2/champion" + key;
-
-        Json::Value championinfo;
-
         data = "";
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        if(curl_easy_perform(curl) != CURLE_OK){
+        if(curl_easy_perform(curl) == CURLE_OK){
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            if(response_code != 200){
+                erase();
+                string error = "Champion information inaccessible.";
+                mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+                error = "Error code: " + to_string(response_code);
+                mvprintw(row/2, (col-error.size())/2, error.c_str());
+                refresh();
+                sleep(60);
+                continue;
+            }
+        }
+        else{
             erase();
             string error = "Connection error. Waiting a minute...";
             mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
@@ -251,21 +281,8 @@ int main(){
             continue;
         }
 
+        Json::Value championinfo;
         reader.parse(data, championinfo);
-
-        if(!championinfo["status"]["status_code"].isNull()){
-            erase();
-            string error = "Error code: " + to_string(championinfo["status"]["status_code"].asInt());
-            mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
-            error = championinfo["status"]["message"].asString();
-            mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
-            refresh();
-            sleep(60);
-            continue;
-        }
-
-
-
 
         //BELOW: OBTAIN LEAGUE INFO
 
@@ -284,10 +301,23 @@ int main(){
             if(playerCount%10 == 0 || playerCount == participantNo){ //this is needed since Riot can't send more than 10 player's leagueinfo at once
 
                 url = urlStart + urlAppend + "/entry" + key;
-
                 data = "";
                 curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-                if(curl_easy_perform(curl) != CURLE_OK){
+                if(curl_easy_perform(curl) == CURLE_OK){
+                    long response_code;
+                    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+                    if(response_code != 200){
+                        erase();
+                        string error = "League information inaccessible.";
+                        mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
+                        error = "Error code: " + to_string(response_code);
+                        mvprintw(row/2, (col-error.size())/2, error.c_str());
+                        refresh();
+                        sleep(60);
+                        goto beginning; //annoyingly continue cannot be used since we're in a for loop
+                    }
+                }
+                else{
                     erase();
                     string error = "Connection error. Waiting a minute...";
                     mvprintw(row/2 - 1, (col-error.size())/2, error.c_str());
@@ -298,20 +328,7 @@ int main(){
 
                 urlAppend = "";
                 Json::Value tempLeague;
-
                 reader.parse(data, tempLeague);
-
-                if(!tempLeague["status"]["status_code"].isNull()){
-                    erase();
-                    string error = "Error code: " + to_string(tempLeague["status"]["status_code"].asInt());
-                    mvprintw(row/2 - 2, (col-error.size())/2, error.c_str());
-                    error = tempLeague["status"]["message"].asString();
-                    mvprintw(row/2, (col-error.size())/2, error.c_str()) + ".";
-                    refresh();
-                    sleep(60);
-                    goto beginning; //annoyingly continue cannot be used since we're in a for loop
-                }
-
                 leagueinfo.append(tempLeague);
             }
         }
@@ -474,41 +491,39 @@ int main(){
 
             url = "https://" + server + ".api.pvp.net/observer-mode/rest/consumer/getSpectatorGameInfo/"
                              + platformid + "/" + to_string(sumname[name]["id"].asInt64()) + key;
-
             data = "";
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
             if(curl_easy_perform(curl) != CURLE_OK){
                 erroroutput = "Connection error...";
                 errorprint = true;
                 continue;
             }
 
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            if(response_code != 200){
+                if(response_code == 404) break; //no game was found and we can break
+                else{
+                    erroroutput = "Error code: " + to_string(response_code);
+                    errorprint = true;
+                    continue; //there was an error
+                }
+            }
 
             Json::Value temp;
-
-
             reader.parse(data, temp);
 
-            if(temp.empty())
-                break;
-            if(!temp["status"]["status_code"].isNull()){
-                erroroutput = "Error code: " + to_string(temp["status"]["status_code"].asInt()) + ". " + temp["status"]["message"].asString() + ".";
-                errorprint = true;
-                continue;
-            }
             if(temp["gameId"] != gameinfo["gameId"])
-                break;
+                break; //found a game but it differs from the current one.
             if(gametime == 0 && temp["gameStartTime"].asInt64() > 0)
                 gametime = temp["gameStartTime"].asInt64()/1000;
 
         }
 
-        bool found = false;
-        int tries = 0;
         curs_set(1);
 
-        do{
+        for(int tries = 0; ; ++tries){ //postgame information start
+
             if(tries >= 6){
                 erase();
                 string output = "Could not find game information...";
@@ -538,138 +553,130 @@ int main(){
                 sleep(60);
                 continue;
             }
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            if(response_code != 200){
+                continue;
+            }
 
             Json::Value postgame;
             reader.parse(data, postgame);
 
-            ++tries;
+            erase();
+            int gameminutes = postgame["matchDuration"].asInt()/60;
+            int gameseconds = postgame["matchDuration"].asInt() - (60*gameminutes);
 
-            if(!postgame.empty()){
+            int tempwidth = (25 > (11 + gametype.size()) ? 25 : 11 + gametype.size());
+            int widthsize = (tempwidth > 0.75*col ? tempwidth : 0.75*col);
+            int printlines = 16; // number of stats to print, change parenthesis for height
 
-                if(!postgame["status"]["status_code"].isNull())
-                    continue;
+            int outputint;
+            double outputdouble;
 
-                erase();
-                found = true;
-                int gameminutes = postgame["matchDuration"].asInt()/60;
-                int gameseconds = postgame["matchDuration"].asInt() - (60*gameminutes);
+            output = "Name:";
+            mvprintw((row/2)-(printlines/2), (col-widthsize)/2, output.c_str());
+            output = "\"" + sumname[name]["fullname"].asString() + "\"";
+            mvprintw((row/2)-(printlines/2), (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                int tempwidth = (25 > (11 + gametype.size()) ? 25 : 11 + gametype.size());
-                int widthsize = (tempwidth > 0.75*col ? tempwidth : 0.75*col);
-                int printlines = 16; // number of stats to print, change parenthesis for height
+            output = "Champion:";
+            mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2, output.c_str());
+            output = sumname[name]["champion"].asString();
+            mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                int outputint;
-                double outputdouble;
+            output = "Game Mode:";
+            mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2, output.c_str());
+            output = gametype;
+            mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                output = "Name:";
-                mvprintw((row/2)-(printlines/2), (col-widthsize)/2, output.c_str());
-                output = "\"" + sumname[name]["fullname"].asString() + "\"";
-                mvprintw((row/2)-(printlines/2), (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+            output = "Game Length:";
+            mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2, output.c_str());
+            output = (gameminutes  < 10 ? "0" : "") + to_string(gameminutes) + ":" + (gameseconds < 10 ? "0" : "") + to_string(gameseconds);
+            mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                output = "Champion:";
-                mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2, output.c_str());
-                output = sumname[name]["champion"].asString();
-                mvprintw((row/2)-(printlines/2) + 1, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+            for(auto c : postgame["participants"]){
+                if(c["participantId"].asInt() == sumname[name]["participantId"].asInt()){ //compares unsigned and signed and so asInt() is needed
 
-                output = "Game Mode:";
-                mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2, output.c_str());
-                output = gametype;
-                mvprintw((row/2)-(printlines/2) + 2, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+                    output = "Status:";
+                    mvprintw((row/2)-(printlines/2) + 4, (col-widthsize)/2, output.c_str());
+                    output = (c["stats"]["winner"].asInt() == 1 ? "VICTORY" : "DEFEAT");
+                    mvprintw((row/2)-(printlines/2) + 4, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                output = "Game Length:";
-                mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2, output.c_str());
-                output = (gameminutes  < 10 ? "0" : "") + to_string(gameminutes) + ":" + (gameseconds < 10 ? "0" : "") + to_string(gameseconds);
-                mvprintw((row/2)-(printlines/2) + 3, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+                    output = "KDA:";
+                    mvprintw((row/2)-(printlines/2) + 5, (col-widthsize)/2, output.c_str());
+                    output = to_string(c["stats"]["kills"].asInt()) + "/" + to_string(c["stats"]["deaths"].asInt()) + "/" + to_string(c["stats"]["assists"].asInt());
+                    mvprintw((row/2)-(printlines/2) + 5, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
-                for(auto c : postgame["participants"]){
-                    if(c["participantId"].asInt() == sumname[name]["participantId"].asInt()){ //compares unsigned and signed and so asInt() is needed
+                    output = "Gold Earned:";
+                    mvprintw((row/2)-(printlines/2) + 6, (col-widthsize)/2, output.c_str());
+                    outputint = c["stats"]["goldEarned"].asInt();
+                    mvprintw((row/2)-(printlines/2) + 6, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
-                        output = "Status:";
-                        mvprintw((row/2)-(printlines/2) + 4, (col-widthsize)/2, output.c_str());
-                        output = (c["stats"]["winner"].asInt() == 1 ? "VICTORY" : "DEFEAT");
-                        mvprintw((row/2)-(printlines/2) + 4, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+                    output = "Minions Killed:";
+                    mvprintw((row/2)-(printlines/2) + 7, (col-widthsize)/2, output.c_str());
+                    outputint = c["stats"]["minionsKilled"].asInt() + c["stats"]["neutralMinionsKilled"].asInt();
+                    mvprintw((row/2)-(printlines/2) + 7, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
-                        output = "KDA:";
-                        mvprintw((row/2)-(printlines/2) + 5, (col-widthsize)/2, output.c_str());
-                        output = to_string(c["stats"]["kills"].asInt()) + "/" + to_string(c["stats"]["deaths"].asInt()) + "/" + to_string(c["stats"]["assists"].asInt());
-                        mvprintw((row/2)-(printlines/2) + 5, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
+                    output = "CS per 10:";
+                    mvprintw((row/2)-(printlines/2) + 8, (col-widthsize)/2, output.c_str());
+                    outputdouble = 600*(static_cast<double>(c["stats"]["minionsKilled"].asInt() + c["stats"]["neutralMinionsKilled"].asInt())/(postgame["matchDuration"].asInt()));
+                    mvprintw((row/2)-(printlines/2) + 8, (col-widthsize)/2 + widthsize - to_string(int(outputdouble)).size() - 3, "%.2f", outputdouble);
 
-                        output = "Gold Earned:";
-                        mvprintw((row/2)-(printlines/2) + 6, (col-widthsize)/2, output.c_str());
-                        outputint = c["stats"]["goldEarned"].asInt();
-                        mvprintw((row/2)-(printlines/2) + 6, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
+                    output = "Wards Placed:";
+                    mvprintw((row/2)-(printlines/2) + 9, (col-widthsize)/2, output.c_str());
+                    outputint = c["stats"]["wardsPlaced"].asInt();
+                    mvprintw((row/2)-(printlines/2) + 9, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
-                        output = "Minions Killed:";
-                        mvprintw((row/2)-(printlines/2) + 7, (col-widthsize)/2, output.c_str());
-                        outputint = c["stats"]["minionsKilled"].asInt() + c["stats"]["neutralMinionsKilled"].asInt();
-                        mvprintw((row/2)-(printlines/2) + 7, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
+                    output = "Largest Killing Spree:";
+                    mvprintw((row/2)-(printlines/2) + 10, (col-widthsize)/2, output.c_str());
+                    outputint = c["stats"]["largestKillingSpree"].asInt();
+                    mvprintw((row/2)-(printlines/2) + 10, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
-                        output = "CS per 10:";
-                        mvprintw((row/2)-(printlines/2) + 8, (col-widthsize)/2, output.c_str());
-                        outputdouble = 600*(static_cast<double>(c["stats"]["minionsKilled"].asInt() + c["stats"]["neutralMinionsKilled"].asInt())/(postgame["matchDuration"].asInt()));
-                        mvprintw((row/2)-(printlines/2) + 8, (col-widthsize)/2 + widthsize - to_string(int(outputdouble)).size() - 3, "%.2f", outputdouble);
+                    output = "Largest Multi Kill:";
+                    mvprintw((row/2)-(printlines/2) + 11, (col-widthsize)/2, output.c_str());
+                    outputint = c["stats"]["largestMultiKill"].asInt();
+                    mvprintw((row/2)-(printlines/2) + 11, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
-                        output = "Wards Placed:";
-                        mvprintw((row/2)-(printlines/2) + 9, (col-widthsize)/2, output.c_str());
-                        outputint = c["stats"]["wardsPlaced"].asInt();
-                        mvprintw((row/2)-(printlines/2) + 9, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
+                    output = "Damage Dealt:";
+                    mvprintw((row/2)-(printlines/2) + 12, (col-widthsize)/2, output.c_str());
+                    outputint = c["stats"]["totalDamageDealtToChampions"].asInt();
+                    mvprintw((row/2)-(printlines/2) + 12, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
 
-                        output = "Largest Killing Spree:";
-                        mvprintw((row/2)-(printlines/2) + 10, (col-widthsize)/2, output.c_str());
-                        outputint = c["stats"]["largestKillingSpree"].asInt();
-                        mvprintw((row/2)-(printlines/2) + 10, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
-
-                        output = "Largest Multi Kill:";
-                        mvprintw((row/2)-(printlines/2) + 11, (col-widthsize)/2, output.c_str());
-                        outputint = c["stats"]["largestMultiKill"].asInt();
-                        mvprintw((row/2)-(printlines/2) + 11, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
-
-                        output = "Damage Dealt:";
-                        mvprintw((row/2)-(printlines/2) + 12, (col-widthsize)/2, output.c_str());
-                        outputint = c["stats"]["totalDamageDealtToChampions"].asInt();
-                        mvprintw((row/2)-(printlines/2) + 12, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
-
-                        output = "Damage Taken:";
-                        mvprintw((row/2)-(printlines/2) + 13, (col-widthsize)/2, output.c_str());
-                        outputint = c["stats"]["totalDamageTaken"].asInt();
-                        mvprintw((row/2)-(printlines/2) + 13, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
-                    }
+                    output = "Damage Taken:";
+                    mvprintw((row/2)-(printlines/2) + 13, (col-widthsize)/2, output.c_str());
+                    outputint = c["stats"]["totalDamageTaken"].asInt();
+                    mvprintw((row/2)-(printlines/2) + 13, (col-widthsize)/2 + widthsize - to_string(outputint).size(), "%d", outputint);
                 }
-
-                int enemydrake, enemybaron;
-                int allydrake, allybaron;
-
-                for(auto c : postgame["teams"]){
-                    if(c["teamId"] == sumname[name]["teamId"]){
-                        allydrake = c["dragonKills"].asInt();
-                        allybaron = c["baronKills"].asInt();
-                    }
-                    else{
-                        enemydrake = c["dragonKills"].asInt();
-                        enemybaron = c["baronKills"].asInt();
-                    }
-                }
-
-                output = "Ally/Enemy Drakes:";
-                mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2, output.c_str());
-                output = to_string(allydrake) + "/" + to_string(enemydrake);
-                mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
-
-                output = "Ally/Enemy Barons:";
-                mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2, output.c_str());
-                output = to_string(allybaron) + "/" + to_string(enemybaron);
-                mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
-
-                refresh();
-                sleep(180);
-
             }
 
-        }while(found == false);
+            int enemydrake, enemybaron;
+            int allydrake, allybaron;
 
+            for(auto c : postgame["teams"]){
+                if(c["teamId"] == sumname[name]["teamId"]){
+                    allydrake = c["dragonKills"].asInt();
+                    allybaron = c["baronKills"].asInt();
+                }
+                else{
+                    enemydrake = c["dragonKills"].asInt();
+                    enemybaron = c["baronKills"].asInt();
+                }
+            }
 
+            output = "Ally/Enemy Drakes:";
+            mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2, output.c_str());
+            output = to_string(allydrake) + "/" + to_string(enemydrake);
+            mvprintw((row/2)-(printlines/2) + 14, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
+            output = "Ally/Enemy Barons:";
+            mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2, output.c_str());
+            output = to_string(allybaron) + "/" + to_string(enemybaron);
+            mvprintw((row/2)-(printlines/2) + 15, (col-widthsize)/2 + widthsize - output.size(), output.c_str());
 
+            refresh();
+            sleep(180);
+            break;
+
+        }
 
         continue;
 
