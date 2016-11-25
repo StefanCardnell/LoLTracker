@@ -75,18 +75,8 @@ Make sure to update your cache and run these commands:
 
 sudo apt-get install libjsoncpp-dev
 sudo apt-get install libncursesw5-dev
-sudo apt-get libboost-program-options1.50-dev
-
-Libcurl needs to be downloaded from the top of this link:
-
-http://curl.haxx.se/download.html
-
-And extracted/install in the normal way:
-
-tar -zxvf curl-7.51.0.tar.gz 
-cd curl-7.51.0 
-make 
-make install
+sudo apt-get install libboost-program-options1.50-dev
+sudo apt-get install libcurl4-openssl-dev
 
 I have added the source code for compiling your own version of the program. The source code should compile fine on both Windows and UNIX operating systems.
 You must compile main.cpp with functions.cpp while also linking the downloaded libraries. The header file functions.h must be in the same directory as the source code main.cpp. 
