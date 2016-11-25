@@ -1,0 +1,5 @@
+key=?api_key=
+askInfo=1
+name=antielephantmine
+server=euw
+showNames=1
