@@ -1,7 +1,7 @@
 README:
 
 - The exectuable is compiled for WINDOWS 64-bit. It will not work on UNIX or 32-bit system, but it is possible to compile for UNIX (see below).
-- I AM A PROGRAMMING NOOB! The source code is probably inefficient and is largely uncommented, while the program itself could be riddled with bugs. 
+- The source code is probably inefficient and is largely uncommented, while the program itself could be riddled with bugs. 
 
 
 [USING THE WINDOWS EXECUTABLE]
